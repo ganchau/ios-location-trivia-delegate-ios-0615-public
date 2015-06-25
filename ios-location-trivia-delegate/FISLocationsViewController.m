@@ -8,8 +8,9 @@
 
 #import "FISLocationsViewController.h"
 #import "FISLocation.h"
+#import "FISAddLocationViewController.h"
 
-@interface FISLocationsViewController ()
+@interface FISLocationsViewController () <FISAddLocationViewControllerDelegate>
 
 @property (nonatomic, strong) NSMutableArray *triviaLocations;
 
@@ -25,6 +26,12 @@
     FISLocation *bowlingGreen = [[FISLocation alloc] initWithName:@"Bowling Green" trivia:@[ @"NYC's oldest park", @"Made a park in 1733", @"Charging Bull was created in 1989" ]];
 
     self.triviaLocations = [@[ empireStateBuilding, bowlingGreen ] mutableCopy];
+}
+
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:YES];
+    [self.tableView reloadData];
 }
 
 #pragma mark - Table view data source
@@ -48,6 +55,33 @@
     return cell;
 }
 
+- (BOOL)addLocationViewController:(FISAddLocationViewController *)viewController shouldAllowLocationNamed:(NSString *)locationName
+{
+    if (locationName.length > 0) {
+        for (FISLocation *location in self.triviaLocations) {
+            if ([[location.name lowercaseString] isEqualToString:[locationName lowercaseString]]) {
+                return NO;
+            }
+        }
+        return YES;
+    }
+    return NO;
+}
+
+
+- (void)addLocationViewController:(FISAddLocationViewController *)viewController didAddLocationNamed:(NSString *)locationName
+{
+    FISLocation *newLocation = [[FISLocation alloc] initWithName:locationName
+                                                          trivia:@[]];
+    [self.triviaLocations addObject:newLocation];
+    [viewController dismissViewControllerAnimated:YES completion:nil];
+}
+
+- (void)addLocationViewControllerDidCancel:(FISAddLocationViewController *)viewController
+{
+    [viewController dismissViewControllerAnimated:YES completion:nil];
+}
+
 -(BOOL)prefersStatusBarHidden
 {
     return YES;
@@ -57,6 +91,8 @@
 
 -(void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
 {
+    FISAddLocationViewController *addLocationDVC = segue.destinationViewController;
+    addLocationDVC.delegate = self;
     
 }
 
